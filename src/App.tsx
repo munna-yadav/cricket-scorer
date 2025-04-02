@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Scoreboard } from './components/Scoreboard';
 import { ScoringButtons } from './components/ScoringButtons';
 import { OverSummary } from './components/OverSummary';
@@ -18,7 +18,35 @@ function App() {
   const [showNoBallPrompt, setShowNoBallPrompt] = useState(false);
   const [isMatchComplete, setIsMatchComplete] = useState(false);
 
+  // Load game state from localStorage on component mount
+  useEffect(() => {
+    const savedState = localStorage.getItem('cricketGameState');
+    if (savedState) {
+      try {
+        const parsedState = JSON.parse(savedState);
+        
+        // Only restore if it was a started game
+        if (parsedState.gameStarted) {
+          setTotalOvers(parsedState.totalOvers);
+          setGameStarted(true); // Explicitly set to true
+          setCurrentOver(parsedState.currentOver);
+          setCurrentBall(parsedState.currentBall);
+          setTotalRuns(parsedState.totalRuns);
+          setWickets(parsedState.wickets);
+          setOverSummary(parsedState.overSummary);
+          setIsMatchComplete(parsedState.isMatchComplete);
+        }
+      } catch (error) {
+        // If there's any error in parsing, clear the localStorage
+        localStorage.removeItem('cricketGameState');
+      }
+    }
+  }, []);
+
   const resetGame = () => {
+    // Clear localStorage when resetting the game
+    localStorage.removeItem('cricketGameState');
+    
     setGameStarted(false);
     setTotalOvers('');
     setCurrentOver(0);
@@ -32,6 +60,21 @@ function App() {
   const handleStartGame = (e: React.FormEvent) => {
     e.preventDefault();
     if (totalOvers) {
+      const initialGameState = {
+        totalOvers,
+        gameStarted: true,
+        currentOver: 0,
+        currentBall: 0,
+        totalRuns: 0,
+        wickets: 0,
+        overSummary: [{ balls: [], totalRuns: 0, legalBalls: 0, wickets: 0 }],
+        isMatchComplete: false
+      };
+      
+      // Save initial game state
+      localStorage.setItem('cricketGameState', JSON.stringify(initialGameState));
+      
+      // Update state
       setGameStarted(true);
       setIsMatchComplete(false);
       setOverSummary([{ balls: [], totalRuns: 0, legalBalls: 0, wickets: 0 }]);
@@ -50,6 +93,9 @@ function App() {
 
   const addBall = (runs: number, isWide = false, isNoBall = false) => {
     const currentOverSummary = [...overSummary];
+    let newCurrentBall = currentBall;
+    let newCurrentOver = currentOver;
+    let newIsMatchComplete = isMatchComplete;
     
     if (isWide || isNoBall) {
       setTotalRuns(prev => prev + 1 + (isNoBall ? runs : 0));
@@ -67,20 +113,37 @@ function App() {
       currentOverSummary[currentOver].balls.push({ runs });
       currentOverSummary[currentOver].totalRuns += runs;
       currentOverSummary[currentOver].legalBalls += 1;
-      setCurrentBall(prev => prev + 1);
+      newCurrentBall = currentBall + 1;
+      setCurrentBall(newCurrentBall);
 
       if (currentOverSummary[currentOver].legalBalls === 6) {
         if (currentOver + 1 < Number(totalOvers)) {
-          setCurrentOver(prev => prev + 1);
-          setCurrentBall(0);
+          newCurrentOver = currentOver + 1;
+          newCurrentBall = 0;
+          setCurrentOver(newCurrentOver);
+          setCurrentBall(newCurrentBall);
           currentOverSummary.push({ balls: [], totalRuns: 0, legalBalls: 0, wickets: 0 });
         } else {
+          newIsMatchComplete = true;
           setIsMatchComplete(true);
         }
       }
     }
     
     setOverSummary(currentOverSummary);
+
+    // Save state after ball
+    const gameState = {
+      totalOvers,
+      gameStarted,
+      currentOver: newCurrentOver,
+      currentBall: newCurrentBall,
+      totalRuns: totalRuns + (isNoBall ? runs + 1 : isWide ? 1 : runs),
+      wickets,
+      overSummary: currentOverSummary,
+      isMatchComplete: newIsMatchComplete,
+    };
+    localStorage.setItem('cricketGameState', JSON.stringify(gameState));
   };
 
   const handleNoBall = () => {
@@ -97,24 +160,47 @@ function App() {
       if (overSummary[currentOver].legalBalls >= 6) {
         return; // Prevent adding more than 6 legal balls
       }
-      setWickets(prev => prev + 1);
+      const newWickets = wickets + 1;
+      setWickets(newWickets);
+      
       const currentOverSummary = [...overSummary];
       currentOverSummary[currentOver].balls.push({ runs: 0, isWicket: true });
       currentOverSummary[currentOver].wickets += 1;
       currentOverSummary[currentOver].legalBalls += 1;
-      setCurrentBall(prev => prev + 1);
+      
+      let newCurrentBall = currentBall + 1;
+      let newCurrentOver = currentOver;
+      let newIsMatchComplete = isMatchComplete;
+      
+      setCurrentBall(newCurrentBall);
 
       if (currentOverSummary[currentOver].legalBalls === 6) {
         if (currentOver + 1 < Number(totalOvers)) {
-          setCurrentOver(prev => prev + 1);
-          setCurrentBall(0);
+          newCurrentOver = currentOver + 1;
+          newCurrentBall = 0;
+          setCurrentOver(newCurrentOver);
+          setCurrentBall(newCurrentBall);
           currentOverSummary.push({ balls: [], totalRuns: 0, legalBalls: 0, wickets: 0 });
         } else {
+          newIsMatchComplete = true;
           setIsMatchComplete(true);
         }
       }
       
       setOverSummary(currentOverSummary);
+
+      // Save state after wicket
+      const gameState = {
+        totalOvers,
+        gameStarted,
+        currentOver: newCurrentOver,
+        currentBall: newCurrentBall,
+        totalRuns,
+        wickets: newWickets,
+        overSummary: currentOverSummary,
+        isMatchComplete: newIsMatchComplete,
+      };
+      localStorage.setItem('cricketGameState', JSON.stringify(gameState));
     }
   };
 
