@@ -1,4 +1,3 @@
-import React from 'react';
 import { Ball } from './Ball';
 import { OverSummary as OverSummaryType } from '../types';
 

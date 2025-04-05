@@ -17,7 +17,7 @@ export function getBallClass(ball: BallType) {
 export function Ball({ ball }: BallProps) {
   return (
     <span
-      className={`inline-block w-8 h-8 rounded-full flex items-center justify-center text-sm ${getBallClass(ball)}`}
+      className={` w-8 h-8 rounded-full flex items-center justify-center text-sm ${getBallClass(ball)}`}
     >
       {ball.isWide ? 'Wd' :
         ball.isNoBall ? `Nb+${ball.runs}` :

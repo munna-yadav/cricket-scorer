@@ -6,6 +6,7 @@ import { MatchComplete } from './components/MatchComplete';
 import { StartGame } from './components/StartGame';
 import { NoBallPrompt } from './components/NoBallPrompt';
 import { OverSummary as OverSummaryType } from './types';
+import { ArrowLeft } from 'lucide-react';
 
 function App() {
   const [totalOvers, setTotalOvers] = useState<number | ''>('');
@@ -17,6 +18,14 @@ function App() {
   const [overSummary, setOverSummary] = useState<OverSummaryType[]>([]);
   const [showNoBallPrompt, setShowNoBallPrompt] = useState(false);
   const [isMatchComplete, setIsMatchComplete] = useState(false);
+  const [stateHistory, setStateHistory] = useState<Array<{
+    totalRuns: number;
+    wickets: number;
+    currentOver: number;
+    currentBall: number;
+    overSummary: OverSummaryType[];
+    isMatchComplete: boolean;
+  }>>([]);
 
   // Load game state from localStorage on component mount
   useEffect(() => {
@@ -55,6 +64,7 @@ function App() {
     setWickets(0);
     setOverSummary([]);
     setIsMatchComplete(false);
+    setStateHistory([]); // Clear the history
   };
 
   const handleStartGame = (e: React.FormEvent) => {
@@ -78,6 +88,7 @@ function App() {
       setGameStarted(true);
       setIsMatchComplete(false);
       setOverSummary([{ balls: [], totalRuns: 0, legalBalls: 0, wickets: 0 }]);
+      setStateHistory([]); // Initialize empty history
     }
   };
 
@@ -92,13 +103,27 @@ function App() {
   };
 
   const addBall = (runs: number, isWide = false, isNoBall = false) => {
-    const currentOverSummary = [...overSummary];
+    // Save the current state to history BEFORE making any changes
+    const currentState = {
+      totalRuns,
+      wickets,
+      currentOver,
+      currentBall,
+      overSummary: JSON.parse(JSON.stringify(overSummary)),
+      isMatchComplete
+    };
+    setStateHistory(prev => [...prev, currentState]);
+
+    const currentOverSummary = JSON.parse(JSON.stringify(overSummary)); // Deep copy
     let newCurrentBall = currentBall;
     let newCurrentOver = currentOver;
     let newIsMatchComplete = isMatchComplete;
+    let newTotalRuns = totalRuns;
     
     if (isWide || isNoBall) {
-      setTotalRuns(prev => prev + 1 + (isNoBall ? runs : 0));
+      newTotalRuns += 1 + (isNoBall ? runs : 0);
+      setTotalRuns(newTotalRuns);
+      
       currentOverSummary[currentOver].balls.push({ 
         runs: isNoBall ? runs : 1, 
         isWide, 
@@ -109,10 +134,14 @@ function App() {
       if (currentOverSummary[currentOver].legalBalls >= 6) {
         return; // Prevent adding more than 6 legal balls
       }
-      setTotalRuns(prev => prev + runs);
+      
+      newTotalRuns += runs;
+      setTotalRuns(newTotalRuns);
+      
       currentOverSummary[currentOver].balls.push({ runs });
       currentOverSummary[currentOver].totalRuns += runs;
       currentOverSummary[currentOver].legalBalls += 1;
+      
       newCurrentBall = currentBall + 1;
       setCurrentBall(newCurrentBall);
 
@@ -138,7 +167,7 @@ function App() {
       gameStarted,
       currentOver: newCurrentOver,
       currentBall: newCurrentBall,
-      totalRuns: totalRuns + (isNoBall ? runs + 1 : isWide ? 1 : runs),
+      totalRuns: newTotalRuns,
       wickets,
       overSummary: currentOverSummary,
       isMatchComplete: newIsMatchComplete,
@@ -157,13 +186,25 @@ function App() {
 
   const handleWicket = () => {
     if (wickets < 10) {
+      // Save current state to history before making changes
+      const currentState = {
+        totalRuns,
+        wickets,
+        currentOver,
+        currentBall,
+        overSummary: JSON.parse(JSON.stringify(overSummary)),
+        isMatchComplete
+      };
+      setStateHistory(prev => [...prev, currentState]);
+
       if (overSummary[currentOver].legalBalls >= 6) {
         return; // Prevent adding more than 6 legal balls
       }
+      
       const newWickets = wickets + 1;
       setWickets(newWickets);
       
-      const currentOverSummary = [...overSummary];
+      const currentOverSummary = JSON.parse(JSON.stringify(overSummary)); // Deep copy
       currentOverSummary[currentOver].balls.push({ runs: 0, isWicket: true });
       currentOverSummary[currentOver].wickets += 1;
       currentOverSummary[currentOver].legalBalls += 1;
@@ -199,6 +240,38 @@ function App() {
         wickets: newWickets,
         overSummary: currentOverSummary,
         isMatchComplete: newIsMatchComplete,
+      };
+      localStorage.setItem('cricketGameState', JSON.stringify(gameState));
+    }
+  };
+
+  const handleUndo = () => {
+    if (stateHistory.length > 0) {
+      const previousState = stateHistory[stateHistory.length - 1];
+      
+      // Restore previous state
+      setTotalRuns(previousState.totalRuns);
+      setWickets(previousState.wickets);
+      setCurrentOver(previousState.currentOver);
+      setCurrentBall(previousState.currentBall);
+      
+      // Make sure to deep copy the overSummary to avoid reference issues
+      setOverSummary(JSON.parse(JSON.stringify(previousState.overSummary)));
+      setIsMatchComplete(previousState.isMatchComplete);
+      
+      // Remove the used state from history
+      setStateHistory(prev => prev.slice(0, -1));
+
+      // Update localStorage
+      const gameState = {
+        totalOvers,
+        gameStarted,
+        currentOver: previousState.currentOver,
+        currentBall: previousState.currentBall,
+        totalRuns: previousState.totalRuns,
+        wickets: previousState.wickets,
+        overSummary: previousState.overSummary,
+        isMatchComplete: previousState.isMatchComplete,
       };
       localStorage.setItem('cricketGameState', JSON.stringify(gameState));
     }
@@ -248,6 +321,8 @@ function App() {
           onWide={() => addBall(1, true)}
           onNoBall={handleNoBall}
           onWicket={handleWicket}
+          onUndo={handleUndo}
+          canUndo={stateHistory.length > 0}
           disabled={
             currentOver === Number(totalOvers) ||
             wickets === 10 ||

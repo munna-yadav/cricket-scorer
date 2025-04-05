@@ -1,12 +1,13 @@
-import React from 'react';
-import { XCircle } from 'lucide-react';
+import { XCircle, ArrowLeft } from 'lucide-react';
 
 interface ScoringButtonsProps {
   onRunScored: (runs: number) => void;
   onWide: () => void;
   onNoBall: () => void;
   onWicket: () => void;
+  onUndo: () => void;
   disabled: boolean;
+  canUndo: boolean;
 }
 
 export function ScoringButtons({
@@ -14,7 +15,9 @@ export function ScoringButtons({
   onWide,
   onNoBall,
   onWicket,
+  onUndo,
   disabled,
+  canUndo,
 }: ScoringButtonsProps) {
   return (
     <div className="bg-white rounded-lg shadow-md p-4 mb-4">
@@ -50,6 +53,16 @@ export function ScoringButtons({
           disabled={disabled}
         >
           <XCircle size={20} /> Wicket
+        </button>
+      </div>
+      <div className="mt-4">
+        <button
+          onClick={onUndo}
+          disabled={!canUndo}
+          className={`w-full py-3 rounded-lg text-lg font-semibold flex items-center justify-center gap-2
+            ${!canUndo ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
+        >
+          <ArrowLeft size={20} /> Undo Last Ball
         </button>
       </div>
     </div>
