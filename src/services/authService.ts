@@ -34,23 +34,18 @@ export async function signIn(username: string, password: string) {
 }
 
 // Check if the current user has admin role
-export async function isAdmin() {
-  // Since we're not using Supabase Auth, we need to rely on some other mechanism
-  // For simplicity, we'll use localStorage to track if a user is logged in
+export const isAdmin = async (): Promise<boolean> => {
   const adminUser = localStorage.getItem('adminUser');
-  
-  if (!adminUser) {
-    return false;
-  }
+  if (!adminUser) return false;
   
   try {
     const user = JSON.parse(adminUser);
-    return user && user.role === 'admin';
+    return user.role === 'admin';
   } catch (error) {
-    console.error('Error parsing admin user from storage:', error);
+    console.error("Error parsing admin user data:", error);
     return false;
   }
-}
+};
 
 // Store admin user in localStorage after successful login
 export function setAdminUser(user: User) {
