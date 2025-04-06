@@ -192,7 +192,11 @@ export function PlayMatch({ isSpectatorMode = false }: PlayMatchProps) {
           <ScoringController matchId={matchId} />
         )}
 
-        <OverSummary overSummary={overSummary} />
+        <OverSummary 
+          overSummary={overSummary} 
+          currentOver={currentOver}
+          isMatchComplete={isMatchComplete}
+        />
 
         {completeError && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-center">

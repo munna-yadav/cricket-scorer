@@ -5,6 +5,7 @@ import { useMatchData } from '../hooks/useMatchData';
 import { calculateRunRate, formatOvers } from '../utils/scoreUtils';
 import { Ball } from './Ball';
 import { LoadingSpinner } from './ui/LoadingSpinner';
+import { OverSummary } from './OverSummary';
 
 export function MatchComplete() {
   const { matchId } = useParams<{ matchId: string }>();
@@ -134,6 +135,12 @@ export function MatchComplete() {
             </div>
           </div>
         </div>
+
+        <OverSummary 
+          overSummary={overSummary} 
+          currentOver={currentOver}
+          isMatchComplete={true}
+        />
 
         <div className="flex gap-4">
           <button
