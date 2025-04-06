@@ -1,28 +1,85 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useGameContext } from '../contexts/GameContext';
+import { useMatchData } from '../hooks/useMatchData';
+import { calculateRunRate, formatOvers } from '../utils/scoreUtils';
 import { Ball } from './Ball';
-import { OverSummary } from '../types';
+import { LoadingSpinner } from './ui/LoadingSpinner';
 
-interface MatchCompleteProps {
-  totalRuns: number;
-  wickets: number;
-  currentOver: number;
-  currentBall: number;
-  runRate: string;
-  overSummary: OverSummary[];
-  onReset: () => void;
-  formatOvers: (overs: number, balls: number) => string;
-}
+export function MatchComplete() {
+  const { matchId } = useParams<{ matchId: string }>();
+  const navigate = useNavigate();
+  
+  const {
+    totalOvers,
+    currentOver,
+    currentBall,
+    totalRuns,
+    wickets,
+    overSummary,
+    setTotalOvers,
+    setCurrentOver,
+    setCurrentBall,
+    setTotalRuns,
+    setWickets,
+    setOverSummary,
+    setIsMatchComplete
+  } = useGameContext();
+  
+  const { isLoading, error, loadMatchData } = useMatchData(matchId || '', true);
 
-export function MatchComplete({
-  totalRuns,
-  wickets,
-  currentOver,
-  currentBall,
-  runRate,
-  overSummary,
-  onReset,
-  formatOvers,
-}: MatchCompleteProps) {
+  useEffect(() => {
+    if (!matchId) {
+      navigate('/');
+      return;
+    }
+    
+    async function loadData() {
+      try {
+        const data = await loadMatchData();
+        if (data) {
+          setTotalOvers(data.totalOvers);
+          setCurrentOver(data.currentOver);
+          setCurrentBall(data.currentBall);
+          setTotalRuns(data.totalRuns);
+          setWickets(data.wickets);
+          setOverSummary(data.overSummary);
+          setIsMatchComplete(data.isMatchComplete);
+        }
+      } catch (err) {
+        console.error("Error loading match data:", err);
+      }
+    }
+    
+    loadData();
+  }, [matchId]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-md w-96 text-center">
+          <div className="text-red-500 text-5xl mb-4">⚠️</div>
+          <h2 className="text-xl font-bold mb-4">Error Loading Match</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button
+            onClick={() => navigate('/')}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            Back to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-2xl mx-auto space-y-4">
@@ -39,7 +96,7 @@ export function MatchComplete({
                 in {formatOvers(currentOver, currentBall)} overs
               </div>
               <div className="text-lg text-gray-600 mt-2">
-                Run Rate: {runRate}
+                Run Rate: {calculateRunRate(totalRuns, currentOver, currentBall)}
               </div>
             </div>
             
@@ -66,7 +123,7 @@ export function MatchComplete({
                       <span className="font-semibold">Over {overIndex + 1}</span>
                       <span>{over.totalRuns} runs, {over.wickets} wicket(s)</span>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       {over.balls.map((ball, ballIndex) => (
                         <Ball key={ballIndex} ball={ball} />
                       ))}
@@ -80,10 +137,10 @@ export function MatchComplete({
 
         <div className="flex gap-4">
           <button
-            onClick={onReset}
-            className="flex-1 bg-red-500 text-white py-3 rounded-lg hover:bg-red-600 font-semibold"
+            onClick={() => navigate('/')}
+            className="flex-1 bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 font-semibold"
           >
-            Reset Match
+            Back to Home
           </button>
         </div>
       </div>
