@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { OverSummaryType, GameState } from '../types';
+import { OverSummaryType, GameState, InningsState } from '../types';
 
 interface GameContextType {
   totalOvers: number | '';
   setTotalOvers: (overs: number | '') => void;
   gameStarted: boolean;
   setGameStarted: (started: boolean) => void;
+  currentInnings: number;
+  setCurrentInnings: (innings: number) => void;
   currentOver: number;
   setCurrentOver: (over: number) => void;
   currentBall: number;
@@ -20,6 +22,16 @@ interface GameContextType {
   setIsMatchComplete: (complete: boolean) => void;
   stateHistory: GameState[];
   setStateHistory: React.Dispatch<React.SetStateAction<GameState[]>>;
+  inningsData: {
+    innings1: InningsState;
+    innings2: InningsState;
+  };
+  setInningsData: React.Dispatch<React.SetStateAction<{
+    innings1: InningsState;
+    innings2: InningsState;
+  }>>;
+  targetRuns: number;
+  setTargetRuns: (target: number) => void;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -27,6 +39,7 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 export function GameProvider({ children }: { children: ReactNode }) {
   const [totalOvers, setTotalOvers] = useState<number | ''>('');
   const [gameStarted, setGameStarted] = useState(false);
+  const [currentInnings, setCurrentInnings] = useState(1);
   const [currentOver, setCurrentOver] = useState(0);
   const [currentBall, setCurrentBall] = useState(0);
   const [totalRuns, setTotalRuns] = useState(0);
@@ -36,6 +49,28 @@ export function GameProvider({ children }: { children: ReactNode }) {
   ]);
   const [isMatchComplete, setIsMatchComplete] = useState(false);
   const [stateHistory, setStateHistory] = useState<GameState[]>([]);
+  const [inningsData, setInningsData] = useState<{
+    innings1: InningsState;
+    innings2: InningsState;
+  }>({
+    innings1: {
+      totalRuns: 0,
+      wickets: 0,
+      currentOver: 0,
+      currentBall: 0,
+      overSummary: [{ balls: [], totalRuns: 0, legalBalls: 0, wickets: 0 }],
+      isComplete: false
+    },
+    innings2: {
+      totalRuns: 0,
+      wickets: 0,
+      currentOver: 0,
+      currentBall: 0,
+      overSummary: [{ balls: [], totalRuns: 0, legalBalls: 0, wickets: 0 }],
+      isComplete: false
+    }
+  });
+  const [targetRuns, setTargetRuns] = useState(0);
 
   return (
     <GameContext.Provider
@@ -44,6 +79,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
         setTotalOvers,
         gameStarted,
         setGameStarted,
+        currentInnings,
+        setCurrentInnings,
         currentOver,
         setCurrentOver,
         currentBall,
@@ -57,7 +94,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
         isMatchComplete,
         setIsMatchComplete,
         stateHistory,
-        setStateHistory
+        setStateHistory,
+        inningsData,
+        setInningsData,
+        targetRuns,
+        setTargetRuns
       }}
     >
       {children}
@@ -71,4 +112,4 @@ export function useGameContext() {
     throw new Error('useGameContext must be used within a GameProvider');
   }
   return context;
-} 
+}

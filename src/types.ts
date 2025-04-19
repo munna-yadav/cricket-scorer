@@ -12,6 +12,15 @@ export interface OverSummaryType {
   wickets: number;
 }
 
+export interface InningsState {
+  totalRuns: number;
+  wickets: number;
+  currentOver: number;
+  currentBall: number;
+  overSummary: OverSummaryType[];
+  isComplete: boolean;
+}
+
 export interface GameState {
   totalRuns: number;
   wickets: number;
@@ -19,6 +28,12 @@ export interface GameState {
   currentBall: number;
   overSummary: OverSummaryType[];
   isMatchComplete: boolean;
+  currentInnings?: number;
+  targetRuns?: number;
+  inningsData?: {
+    innings1: InningsState;
+    innings2: InningsState;
+  };
 }
 
 export interface MatchData {
@@ -30,5 +45,16 @@ export interface MatchData {
   current_over: number;
   current_ball: number;
   is_match_complete: boolean;
+  current_innings: number;
+  innings1_total_runs: number;
+  innings1_wickets: number;
+  innings1_current_over: number;
+  innings1_current_ball: number;
+  innings1_is_complete: boolean;
+  innings2_total_runs: number;
+  innings2_wickets: number;
+  innings2_current_over: number;
+  innings2_current_ball: number;
+  innings2_is_complete: boolean;
   [key: string]: any;
 }
