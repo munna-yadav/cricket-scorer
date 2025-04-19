@@ -103,9 +103,9 @@ export function PlayMatch({ isSpectatorMode = false }: PlayMatchProps) {
           // Ensure the current over exists in overSummary
           ensureOverExists(data.currentOver, data.overSummary);
           
-          // Redirect to completed match view if the match is complete
-          if (data.isMatchComplete && !isSpectatorMode) {
-            navigate(`/match/${matchId}/completed`);
+          // Redirect to completed match view if the match is complete (for both spectator and scorer)
+          if (data.isMatchComplete) {
+            navigate(`/${isSpectatorMode ? 'watch' : 'match'}/${matchId}/completed`);
           }
         }
       } catch (err) {
@@ -116,8 +116,8 @@ export function PlayMatch({ isSpectatorMode = false }: PlayMatchProps) {
     // Initial data load
     loadData();
     
-    // Set up polling for spectator mode
-    if (isSpectatorMode) {
+    // Set up polling for spectator mode (only if match is not complete)
+    if (isSpectatorMode && !isMatchComplete) {
       // Poll every 15 seconds for new data in spectator mode
       pollingIntervalRef.current = window.setInterval(() => {
         loadData();
@@ -130,7 +130,7 @@ export function PlayMatch({ isSpectatorMode = false }: PlayMatchProps) {
         window.clearInterval(pollingIntervalRef.current);
       }
     };
-  }, [matchId, isSpectatorMode]);
+  }, [matchId, isSpectatorMode, isMatchComplete]);
   
   // Helper function to ensure that the current over exists in overSummary
   const ensureOverExists = (overNumber: number, summaryArray: OverSummaryType[]) => {

@@ -7,7 +7,11 @@ import { Ball } from './Ball';
 import { LoadingSpinner } from './ui/LoadingSpinner';
 import { InningsState } from '../types';
 
-export function MatchComplete() {
+interface MatchCompleteProps {
+  isSpectatorMode?: boolean;
+}
+
+export function MatchComplete({ isSpectatorMode = false }: MatchCompleteProps) {
   const { matchId } = useParams<{ matchId: string }>();
   const navigate = useNavigate();
   
@@ -33,7 +37,7 @@ export function MatchComplete() {
     setTargetRuns
   } = useGameContext();
   
-  const { isLoading, error, loadMatchData } = useMatchData(matchId || '', true);
+  const { isLoading, error, loadMatchData } = useMatchData(matchId || '', isSpectatorMode);
   
   // Determine match result
   const getMatchResult = () => {
@@ -97,10 +101,10 @@ export function MatchComplete() {
           <h2 className="text-xl font-bold mb-4">Error Loading Match</h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate(isSpectatorMode ? '/watch' : '/')}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
           >
-            Back to Home
+            {isSpectatorMode ? "Back to Match List" : "Back to Home"}
           </button>
         </div>
       </div>
@@ -178,16 +182,10 @@ export function MatchComplete() {
 
         <div className="flex gap-4">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate(isSpectatorMode ? '/watch' : '/')}
             className="flex-1 bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 font-semibold"
           >
-            Back to Home
-          </button>
-          <button
-            onClick={() => navigate('/watch')}
-            className="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 font-semibold"
-          >
-            View More Matches
+            {isSpectatorMode ? "Back to Match List" : "Back to Home"}
           </button>
         </div>
       </div>

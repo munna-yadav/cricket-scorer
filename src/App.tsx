@@ -62,6 +62,11 @@ function App() {
             <PlayMatch isSpectatorMode={true} />
           </GameProvider>
         } />
+        <Route path="/watch/:matchId/completed" element={
+          <GameProvider>
+            <MatchComplete isSpectatorMode={true} />
+          </GameProvider>
+        } />
 
         {/* Admin route */}
         <Route path="/admin" element={
