@@ -8,6 +8,7 @@ import { useMatchData } from '../../hooks/useMatchData';
 import { calculateRunRate, formatOvers } from '../../utils/scoreUtils';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { markMatchComplete } from '../../services/matchService';
+import { OverSummaryType } from '../../types';
 
 interface PlayMatchProps {
   isSpectatorMode?: boolean;
@@ -76,6 +77,35 @@ export function PlayMatch({ isSpectatorMode = false }: PlayMatchProps) {
     const ballsCompleted = currentOver * 6 + currentBall;
     const ballsTotal = Number(totalOvers) * 6;
     return ballsTotal - ballsCompleted;
+  };
+
+  // Add a function to handle sharing the match URL
+  const handleShare = () => {
+    if (!matchId) return;
+    
+    const shareUrl = `${window.location.origin}/match/${matchId}`;
+    
+    // Use the Clipboard API to copy the URL
+    navigator.clipboard.writeText(shareUrl)
+      .then(() => {
+        // Show a temporary success message
+        const shareButton = document.getElementById('share-button');
+        if (shareButton) {
+          const originalText = shareButton.innerHTML;
+          shareButton.innerHTML = 'Copied! ✓';
+          shareButton.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+          shareButton.classList.add('bg-green-500');
+          
+          setTimeout(() => {
+            shareButton.innerHTML = originalText;
+            shareButton.classList.remove('bg-green-500');
+            shareButton.classList.add('bg-blue-500', 'hover:bg-blue-600');
+          }, 2000);
+        }
+      })
+      .catch(err => {
+        console.error('Failed to copy: ', err);
+      });
   };
 
   // Load match data when the component mounts or matchId changes
@@ -216,7 +246,20 @@ export function PlayMatch({ isSpectatorMode = false }: PlayMatchProps) {
           requiredRunRate={currentInnings === 2 ? calculateRequiredRunRate() : undefined}
           runsRequired={currentInnings === 2 ? calculateRunsRequired() : undefined}
           ballsRemaining={currentInnings === 2 ? calculateBallsRemaining() : undefined}
+          matchId={matchId}
+          isSpectatorMode={isSpectatorMode}
         />
+        
+        {/* Add share button for scorers */}
+        {/* {!isSpectatorMode && matchId && (
+          <button 
+            id="share-button"
+            onClick={handleShare} 
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg font-semibold mb-4 flex items-center justify-center"
+          >
+            📋 Share Match Link
+          </button>
+        )} */}
 
         {!isSpectatorMode && matchId && (
           <ScoringController matchId={matchId} />

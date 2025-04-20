@@ -16,6 +16,8 @@ interface ScoreboardProps {
   requiredRunRate?: string;
   runsRequired?: number;
   ballsRemaining?: number;
+  matchId?: string;
+  isSpectatorMode?: boolean;
 }
 
 export function Scoreboard({
@@ -31,12 +33,53 @@ export function Scoreboard({
   targetRuns,
   requiredRunRate,
   runsRequired,
-  ballsRemaining
+  ballsRemaining,
+  matchId,
+  isSpectatorMode
 }: ScoreboardProps) {
+  
+  // Function to handle the copy link button
+  const handleCopyLink = () => {
+    if (!matchId) return;
+    
+    const shareUrl = `${window.location.origin}/watch/${matchId}`;
+    
+    navigator.clipboard.writeText(shareUrl)
+      .then(() => {
+        const copyButton = document.getElementById('copy-button');
+        if (copyButton) {
+          copyButton.textContent = 'Copied! ✓';
+          copyButton.classList.remove('bg-green-600');
+          copyButton.classList.add('bg-green-500');
+          
+          setTimeout(() => {
+            copyButton.textContent = 'Share Match';
+            copyButton.classList.remove('bg-green-500');
+            copyButton.classList.add('bg-green-600');
+          }, 2000);
+        }
+      })
+      .catch(err => {
+        console.error('Failed to copy: ', err);
+      });
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden mb-4">
-      <div className={`${currentInnings === 1 ? 'bg-blue-700' : 'bg-green-700'} text-white p-4`}>
-        <h2 className="text-xl font-bold">Scorecard - Innings {currentInnings}</h2>
+      <div className={`${currentInnings === 1 ? 'bg-blue-700' : 'bg-green-700'} text-white p-4 relative`}>
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-bold">Scorecard - Innings {currentInnings}</h2>
+          
+          {!isSpectatorMode && matchId && (
+            <button 
+              id="copy-button"
+              onClick={handleCopyLink}
+              className="bg-green-600 hover:bg-green-700 text-white text-sm px-3 py-1 rounded-full flex items-center"
+            >
+              Share Match
+            </button>
+          )}
+        </div>
       </div>
       <div className="p-4">
         <div className="flex justify-between items-baseline mb-4">
