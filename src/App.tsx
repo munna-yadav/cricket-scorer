@@ -9,7 +9,6 @@ import { GameProvider } from './contexts/GameContext';
 import { useMatches } from './hooks/useMatches';
 import { createMatch } from './services/matchService';
 import { LoadingSpinner } from './components/ui/LoadingSpinner';
-import { ErrorMessage } from './components/ui/ErrorMessage';
 import { AdminPage } from './components/admin/AdminPage';
 import { LoginPage } from './components/admin/LoginPage';
 import { isAdmin } from './services/authService';

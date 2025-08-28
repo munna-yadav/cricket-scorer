@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { CoinFlip } from './CoinFlip';
 
 export function HomeScreen() {
+  const [isTossModalOpen, setIsTossModalOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-blue-50 flex items-center justify-center">
       <div className="w-full max-w-md p-8">
@@ -26,6 +29,16 @@ export function HomeScreen() {
                 👁️ Watch a Match
               </button>
             </Link>
+          </div>
+          
+          {/* Toss Button */}
+          <div className="mt-6">
+            <button
+              onClick={() => setIsTossModalOpen(true)}
+              className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white py-4 rounded-lg hover:from-yellow-600 hover:to-yellow-700 font-semibold text-lg flex items-center justify-center transition-all duration-200 transform hover:scale-[1.02]"
+            >
+              🪙 Toss the Coin
+            </button>
           </div>
           
           <div className="mt-8 pt-6 border-t border-gray-200">
@@ -57,6 +70,12 @@ export function HomeScreen() {
           © {new Date().getFullYear()} Cricket Scorer App • All Rights Reserved
         </div>
       </div>
+      
+      {/* Coin Toss Modal */}
+      <CoinFlip 
+        isOpen={isTossModalOpen} 
+        onClose={() => setIsTossModalOpen(false)} 
+      />
     </div>
   );
 }
